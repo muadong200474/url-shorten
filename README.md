@@ -21,6 +21,9 @@ http://localhost:8082
 
 ```bash
 curl -d '{"realUrl":"https://google.com"}' -H 'Content-Type: application/json' http://localhost:8081/
+
+Result:
+{"id":2,"realUrl":"https://dantri.com.vn","updatedAt":"2022-10-24T13:25:06.802Z","createdAt":"2022-10-24T13:25:06.802Z","shortUrlHash":"LdzbdG","shortUrl":"http://localhost:8082/LdzbdG"}
 ```
 
 2. Delete short url
