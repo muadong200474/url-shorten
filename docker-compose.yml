@@ -1,0 +1,70 @@
+version: "3"
+
+services:
+  db:
+    build: ./Database
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: mydb
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    restart: always
+    # env_file ->use host's env in compose file
+    # env_file: env/db.env
+    # environments ->pass environment variable to container
+    environment:
+      - MYSQL_DATABASE=short-url
+      - MYSQL_ROOT_PASSWORD=123456
+  
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: myrabbitmq
+    # 5672 is for RabbitMQ and 15672 is for RabbitMQ web interface
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+  management:
+    build: ./Management
+    ports:
+      - "8081:3000"
+    volumes:
+      - ./Management/src:/nodeapp/src
+    depends_on:
+      - db
+      - rabbitmq
+    environment:
+      - DATABASE_NAME=short-url
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=123456
+      - DATABASE_HOST=mydb
+      - RABBITMQ_HOST=myrabbitmq
+      - REDIRECTION_APP_URL=http://localhost:8082
+      - APP_PORT=3000
+
+  redirection:
+    build: ./Redirection
+    ports:
+      - "8082:3000"
+    volumes:
+      - ./Redirection/src:/nodeapp/src
+    depends_on:
+      - rabbitmq
+    restart: on-failure
+    environment:
+      - RABBITMQ_HOST=myrabbitmq
+      - RABBITMQ_PORT=5672
+      - REDIS_HOST=redis
+      - APP_URL=http://localhost:8082/
+      - APP_PORT=3000
+    
+  redis:
+    image: "redis:6"
+    ports:
+      - "6379:6379"
+    expose:
+      - 6379
+    
+volumes:
+  mysql-data:
